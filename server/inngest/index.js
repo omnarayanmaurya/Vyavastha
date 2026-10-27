@@ -1,4 +1,3 @@
-
 import { Inngest } from "inngest";
 import prisma from "../configs/prisma.js";
 
@@ -9,8 +8,10 @@ export const inngest = new Inngest({
 
 // Sync newly created Clerk users to the database
 const syncUserCreation = inngest.createFunction(
-    { id: "sync-user-from-clerk" },
-    { event: "clerk/user.created" },
+    {
+        id: "sync-user-from-clerk",
+        triggers: [{ event: "clerk/user.created" }],
+    },
     async ({ event }) => {
         const { data } = event;
 
@@ -27,10 +28,14 @@ const syncUserCreation = inngest.createFunction(
 
 // Delete users from the database when deleted in Clerk
 const syncUserDeletion = inngest.createFunction(
-    { id: "delete-user-from-clerk" },
-    { event: "clerk/user.deleted" },
+    {
+        id: "delete-user-from-clerk",
+        triggers: [{ event: "clerk/user.deleted" }],
+    },
     async ({ event }) => {
         const { data } = event;
+
+        if (!data.id) return;
 
         await prisma.user.delete({
             where: {
@@ -42,8 +47,10 @@ const syncUserDeletion = inngest.createFunction(
 
 // Update users when their Clerk profiles change
 const syncUserUpdation = inngest.createFunction(
-    { id: "update-user-from-clerk" },
-    { event: "clerk/user.updated" },
+    {
+        id: "update-user-from-clerk",
+        triggers: [{ event: "clerk/user.updated" }],
+    },
     async ({ event }) => {
         const { data } = event;
 
